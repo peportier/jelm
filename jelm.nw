@@ -1,0 +1,512 @@
+\documentclass[10pt]{article}
+\usepackage[a4paper, total={6in, 8in}]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+\usepackage{noweb}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\title{Extreme Learning Machine in J}
+\author{Pierre-Edouard Portier}
+\date{2019}
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\begin{document}
+\maketitle
+\section{Regression}
+$\vec{x^{(1)}}\dots\vec{x^{(P)}}$ are vectors of $\mathbb{R}^{n-1}$ with
+associated values $y^{(1)}\dots y^{(P)}$ of $\mathbb{R}$.
+We search a function $f(\vec{x}):\mathbb{R}^{n-1} \rightarrow \mathbb{R}$ to
+model the observed relationship between $\vec{x}$ and $y$.
+$f$ can have a fixed parameterized form. For example:
+\[
+f(\vec{x}) = a_0 + a_1 x_1 + a_2 x_2 + \dots + a_{n-1} x_{n-1}
+\]
+
+If $P=n$, parameters $a_0 \dots a_{n-1}$ are found by solving a linear system.
+\[
+\begin{cases}
+y^{(1)} &= a_0 + a_1 x_1^{(1)} + a_2 x_2^{(1)} + \dots + a_{n-1} x_{n-1}^{(1)} \\
+\dots &= \dots \\
+y^{(P)} &= a_0 + a_1 x_1^{(P)} + a_2 x_2^{(P)} + \dots + a_{n-1} x_{n-1}^{(P)} \\
+\end{cases}
+\]
+This system can be written In matrix form.
+\[
+\left( \begin{array}{cccc}
+1 & x^{(1)}_1 & \dots & x^{(1)}_{n-1} \\
+1 & x^{(2)}_1 & \dots & x^{(2)}_{n-1} \\
+\dots & \dots & \dots & \dots \\
+1 & x^{(P)}_1 & \dots & x^{(P)}_{n-1}
+\end{array} \right)
+\left( \begin{array}{c}
+a_0 \\ a_1 \\ \dots \\ a_{n-1} 
+\end{array} \right)
+=
+\left( \begin{array}{c}
+y^{(1)} \\ y^{(2)} \\ \dots \\ y^{(P)} 
+\end{array} \right)
+\]
+
+Each line of the first term matrix is a vector $\vec{x^{(i)T}}$ with the
+addition of a constant coordinate that accounts for parameter $a_0$.
+Thus, naming this matrix $\vec{X}^T$, the linear system can also be written:
+\[
+\vec{X}^T \vec{a} = \vec{y}
+\]
+
+Consider the special case when $x$ is a number and $f$ is a polynomial of degree $n-1$:
+\[
+f(x) = a_0 + a_1 x + a_2 x^2 + \dots + a_{n-1}x^{n-1}
+\]
+
+With $P=n$ examples $\left(x^{(k)},y^{(k)}\right)$, the parameters are found by
+solving the following linear system:
+\begin{equation}
+\left( \begin{array}{ccccc}
+1 & x^{(1)} & (x^{(1)})^2 & \dots & (x^{(1)})^{n-1} \\
+1 & x^{(2)} & (x^{(2)})^2 & \dots & (x^{(2)})^{n-1} \\
+\dots & \dots & \dots & \dots \\
+1 & x^{(P)} & (x^{(P)})^2 & \dots & (x^{(P)})^{n-1}
+\end{array} \right)
+\left( \begin{array}{c}
+a_0 \\ a_1 \\ \dots \\ a_{n-1} 
+\end{array} \right)
+=
+\left( \begin{array}{c}
+y^{(1)} \\ y^{(2)} \\ \dots \\ y^{(P)} 
+\end{array} \right)
+\label{eqn:vandermonde}
+\end{equation}
+Incidentally, the first term is called the Vandermonde Matrix.
+
+\subsection{Experiment with a 1-dimensional synthetic dataset}
+We define a non linear function [[f]] from which we generate a dataset
+
+<<dataset>>=
+f=: 3 : '(^y) * cos 2*pi * sin pi * y'
+<<noise>>
+<<gendat>>
+
+@
+In traditional mathematical form, this function is: 
+\[f(x)=e^x \times cos\left(2\pi sin\left(\pi x\right)\right)\]
+
+Function [[noise]] adds some random noise to the values of a vector. For
+example [[0.5 noise v]], will add random values uniformly drawn from interval
+$[-0.5,0.5]$ to the terms of vector [[v]].
+
+<<noise>>=
+noise=: 4 : 'y + -&x *&(+:x) ? (#y) # 0'
+
+@
+[[0.5 gendat 10]] generates from [[f]] a dataset [[(X,Y)]] of 10 points with
+random noise in $[-0.5,0.5]$ added to [[Y]]. It also stores in [[minmaxX]] the
+minimum and maximum values of [[X]]. It computes the pair [[minmaxf]],
+where the first term is ten percent smaller than the minimum of [[f]] on interval
+$[0,1]$, and the second term is ten percent bigger than the maximum of [[f]] on
+interval $[0,1]$. [[minmaxf]] is later used to crop the plots so that
+extreme values are not visible.
+
+<<utils>>=
+pushup=:   ] + 0.1 * |
+pushdown=: ] - 0.1 * |
+
+<<gendat>>=
+gendat=: 4 : 0
+  X=: ? y $ 0
+  Y=: x noise f X
+  minmaxX=: (<./ , >./) X
+  minmaxf=: (([: pushdown <./) , ([: pushup >./)) f steps 0 1 100
+  <<testdat>>
+)
+
+@
+[[plotdat 0]] plots the dataset.
+
+<<plotdat>>=
+plotdatnoshow=: 3 : 0
+  <<initplot>>
+  pd X;Y
+  <<plotf>>
+)
+plotdat=: 3 : 0
+  plotdatnoshow 0
+  pd 'show'
+)
+
+<<initplot>>=
+pd 'reset'
+pd 'color green'
+pd 'type marker'
+pd 'markersize 1'
+pd 'markers circle'
+
+<<plotf>>=
+pd 'color red'
+pd 'type line'
+pd 'pensize 1'
+pd (;f) steps 0 1 100
+
+@
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{plotdat}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   0.5 gendat 10
+_2.53128 2.99011
+   plotdat 0
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+[[polyreg 0]] solves the linear system \eqref{eqn:vandermonde} and stores the
+coefficients of the polynomial in variable [[c]].
+
+<<polyreg>>=
+polyreg=: 3 : 0
+  c=: Y ([ %. ] ^/ i.@#@]) X
+  plotpoly 0
+)
+
+<<utils>>=
+NB. select from y the elements with values between {.x and {:x
+sel=: (] >: {.@[) *. (] <: {:@[)
+
+<<plotpoly>>=
+plotpoly=: 3 : 0
+  plotdatnoshow 0
+  pd 'color blue'
+  xs=: (] #~ minmaxX"_ sel ]) /:~ X,steps 0 1 100
+  pval=: c&p. xs
+  crop=: minmaxf sel pval
+  pd (crop # xs);(crop # pval)
+  pd 'show'
+)
+
+@
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{polyreg}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   polyreg 0
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+\subsection{Generalization to a function space}
+Given a basis for a function space, we can try to express [[f]] as a combination
+of basis functions.
+\[
+f(\vec{x}) = a_1 f_1(\vec{x}) + a_2 f_2(\vec{x}) + \dots + a_n f_n(\vec{x})
+\]
+
+Given a dataset of $n$ pairs $\biggl(\vec{x}^{(k)},\vec{y}^{(k)}\biggr)$, the
+coefficients $a_i$ are found by solving a linear system.
+
+\[
+\left( \begin{array}{ccccc}
+f_1(\vec{x}^{(1)}) & f_2(\vec{x}^{(1)}) & \dots & f_n(\vec{x}^{(1)}) \\
+f_1(\vec{x}^{(2)}) & f_2(\vec{x}^{(2)}) & \dots & f_n(\vec{x}^{(2)}) \\
+\dots & \dots & \dots & \dots \\
+f_1(\vec{x}^{(n)}) & f_2(\vec{x}^{(n)}) & \dots & f_n(\vec{x}^{(n)})
+\end{array} \right)
+\left( \begin{array}{c}
+a_1 \\ a_2 \\ \dots \\ a_{n} 
+\end{array} \right)
+=
+\left( \begin{array}{c}
+y^{(1)} \\ y^{(2)} \\ \dots \\ y^{(n)} 
+\end{array} \right)
+\]
+
+Let us denote this linear system by $\vec{A}\vec{x}=\vec{b}$.
+
+\subsection{Least squares}
+With more examples than the number of basis functions, the linear system
+$\vec{A}\vec{x}=\vec{b}$ (with $\vec{A} \in \mathbb{R}^{m \times n}$) doesn't
+necessarily have a solution.
+Thus, we want to find an approximate solution $\vec{A}\vec{x}\approx\vec{b}$
+that minimizes the squares of the errors: $\norm{\vec{A}\vec{x}-\vec{b}}^2_2$.
+
+\begin{align*}
+ & \norm{\vec{A}\vec{x}-\vec{b}}^2_2 \\
+= \{ & \norm{\vec{x}}_2 = \sqrt{\vec{x}\cdot\vec{x}} \} \\
+ & \left(\vec{A}\vec{x}-\vec{b}\right) \cdot \left(\vec{A}\vec{x}-\vec{b}\right) \\
+= \{ & \text{euclidean scalar product} \} \\
+ & \left(\vec{A}\vec{x}-\vec{b}\right)^T \left(\vec{A}\vec{x}-\vec{b}\right) \\
+= \{ & \text{property of transposition} \} \\
+ & \left(\vec{x}^T\vec{A}^T - \vec{b}^T \right) \left(\vec{A}\vec{x}-\vec{b}\right) \\
+= \{ & \text{multiplication} \} \\
+ & \vec{x}^T\vec{A}^T\vec{A}\vec{x} - \vec{x}^T\vec{A}^T\vec{b} - \vec{b}^T\vec{A}\vec{x} + \vec{b}^T\vec{b} \\
+= \{ & \text{Since each element of the sum is a scalar, } \vec{b}^T\vec{A}\vec{x} = \left(\vec{b}^T\vec{A}\vec{x}\right)^T = \vec{x}^T\vec{A}^T\vec{b} \} \\
+ & \vec{x}^T\vec{A}^T\vec{A}\vec{x} - 2\vec{x}^T\vec{A}^T\vec{b} + \vec{b}^T\vec{b}
+\end{align*}
+
+To this quadratic expression corresponds a convex surface.
+Its minimum is found by setting the derivative to zero.
+
+\begin{align*}
+ & \vec{0} = 2\vec{A}^T\vec{A}\vec{x} - 2\vec{A}^T\vec{b} \\
+=& \\
+ & \vec{A}^T\vec{A}\vec{x} = \vec{A}^T\vec{b}
+\end{align*}
+
+Thus, when $m>n$, we solve $\vec{A}\vec{x}\approx\vec{b}$ by solving
+$\vec{A}^T\vec{A}\vec{x} = \vec{A}^T\vec{b}$.
+$\vec{A}^T\vec{A}$ is called the Gram matrix.
+
+[[gram y]] computes the Gram matrix [[S]] for a polynomial basis of degree [[y-1]].
+
+<<gram>>=
+gram=: 3 : 0
+  A=: X ^/ i.y
+  S=: (mp~ |:) A
+) 
+
+<<utils>>=
+mp=: +/ . * NB. matrix product
+
+@
+
+[[leastsq y]] solves the overdetermined linear system by computing the Gram
+matrix for a polynomial basis of degree [[y-1]].
+
+<<gram>>=
+leastsq=: 3 : 0
+  gram y
+  c=: ((|:A) mp Y) %. S
+  plotpoly 0
+)
+
+@
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{leastsq5}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   0.5 gendat 100
+_2.53128 2.99011
+   leastsq 5
+\end{verbatim}
+\end{minipage}
+
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{leastsq8}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   leastsq 8
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+\subsection{Tikhonov regularization}
+With less examples than the number of basis functions (i.e. $m<n$,
+underdetermined system), $\vec{A}\vec{x}=\vec{b}$ doesn't have a unique solution.
+Even with $m\geq n$, the linear system can have approximate solutions more
+desirable than the optimal one. In particular, this is the case when several
+examples are very similar. For example, the solution to\dots
+
+\[
+\left( \begin{array}{cc}
+1 & 1 \\
+1 & 1.00001 \\
+\end{array} \right)
+\left( \begin{array}{c}
+x_1 \\ x_2
+\end{array} \right)
+=
+\left( \begin{array}{c}
+1 \\ 0.99 
+\end{array} \right)
+\]
+
+\dots is $\vec{x}^T = (1001,-1000)$. However, the approximate solution
+$\vec{x}^T = (0.5,0.5)$ is  more suitable. Indeed, the optimal solution is not
+likely to adapt well to new inputs (e.g., input $(1,2)$ would be projected onto
+$-999$\dots).
+
+Thus, when several solutions are feasible, we want to favor smaller
+norms $\norm{x}_2$ by solving a new minimization problem:
+
+\begin{align*}
+\min_{\vec{x}} \norm{\vec{A}\vec{x}-\vec{b}}^2_2 + \alpha \norm{\vec{x}}^2_2 \\
+with \quad 0 < \alpha < 1
+\end{align*}
+
+The minimum of this expression is found by setting its derivative to zero.
+
+\begin{align*}
+ & \vec{0} = 2\vec{A}^T\vec{A}\vec{x} - 2\vec{A}^T\vec{b} + 2\alpha\vec{x} \\
+=& \\
+ & \left( \vec{A}^T\vec{A} + \alpha \vec{I}_{n\times n} \right) \vec{x} = \vec{A}^T \vec{b}
+\end{align*}
+
+It comes down to adding a small positive value to the diagonal of the
+Gram matrix. This approach has been given several names: Tikhonov regularization,
+ridge regression\dots
+
+[[1E_3 ridge 5]] will solve the ridge regression for a polynomial basis of
+degree $5$ and a regularization coefficient equal to $10^{-3}$.
+
+<<ridge>>=
+ridge=: 4 : 0
+  gram y
+  c=: ((|:A) mp Y) %.  x addDiag S
+  plotpoly 0
+)
+
+<<utils>>=
+diag=: (<0 1)&|: : (([:(>:*i.)[:#])})
+addDiag=: ([+diag@]) diag ] NB. add x to the diagonal of y
+
+@
+\subsection{Extreme Learning Machine}
+The following parametrized form for $f$ corresponds to a single hidden layer
+neural network.
+\[
+f(\vec{x}) = a_1 g(\vec{w_1}\cdot\vec{x}+b_1) + a_2 g(\vec{w_2}\cdot\vec{x}+b_2) 
++ \dots + a_M g(\vec{w_M}\cdot\vec{x}+b_M)
+\]
+$g$ is a non-linear activation function. We use the rectified linear unit (ReLU):
+$g(y)=max(0,y)$.
+
+If vectors $\vec{w_1}\dots\vec{w_M}$ and scalars $b_1\dots b_M$ are initialized
+randomly and never modified (i.e., if they are not parameters), we can solve a
+linear system $\vec{H}\vec{a}=\vec{y}$ of unknwon $\vec{a}$.
+\[
+\vec{H}:
+\left( \begin{array}{ccc}
+g(\vec{w_1}\cdot\vec{x_1}+b_1) & \dots & g(\vec{w_M}\cdot\vec{x_1}+b_M) \\
+\dots & \dots & \dots \\
+g(\vec{w_1}\cdot\vec{x_N}+b_1) & \dots & g(\vec{w_M}\cdot\vec{x_N}+b_M)
+\end{array} \right)
+\]
+\begin{align*}
+\vec{a}^T &: \left(a_1 \dots a_M\right) \\
+\vec{y}^T &: \left(y_1 \dots y_N\right)
+\end{align*}
+
+This approach is named \emph{Extreme Learning Machine}
+\footnote{\url{https://scholar.google.fr/scholar?q=extreme+learning+machine}}.
+
+[[initelm 100]] initializes randomly matrix H with $100$ neurons on the hidden
+layer (i.e., $M=100$) and computes its Gram form [[S]].
+
+<<elm>>=
+initelm=: 3 : 0
+  W=: _1 + 2 * ? (y,1) $ 0 NB. input weights
+  B=: ? y $ 0 NB. bias
+  H=: mkH ,. X
+  0 [ S=: (mp~ |:) H
+)
+mkH=: 3 : '0&>. B +"1 y mp"1/ W'
+
+@
+[[elm 1E_4]] solves the extreme learning machine linear system with a Tikhonov
+regularization coefficient of $10^{-4}$.
+
+<<elm>>=
+elm=: 3 : 0
+  c=: ((|:H) mp Y) %.  y addDiag S
+  plotelm 0
+)
+
+<<plotelm>>=
+plotelm=: 3 : 0
+  plotdatnoshow 0
+  pd 'type line'
+  pd 'color blue'
+  xs=: (] #~ minmaxX"_ sel ]) steps (<.<./X),(>.>./X),100
+  pd xs;(mkH ,. xs) mp c
+  pd 'show'
+)
+
+@
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{elm_1E_3}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   initelm 100
+0
+   elm 1E_3
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+\subsection{Test dataset}
+A test set is used to assert the capacity of the model to generalize
+on unseen data. Its size is fixed to $10\%$ of the size of the training set.
+
+<<testdat>>=
+XT=: ? (>. 0.1 * y) $ 0
+YT=: f XT
+
+@
+[[test]] computes the root mean square error (RMSE) on the test set.
+
+<<utils>>=
+mean=: +/ % #
+rmse=: [: %: [: mean ([: *: -)
+
+<<test>>=
+test=: 3 : 0
+  YThat=: (mkH ,. XT) mp c
+  plottest 0
+  YT rmse YThat
+)
+
+<<plottest>>=
+plottest=: 3 : 0
+  <<initplot>>
+  pd XT;YT
+  pd 'color magenta'
+  pd XT;YThat
+  <<plotf>>
+  pd 'show'
+)
+
+@
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{elmtest}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   test 0
+0.172019
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+<<require>>=
+require'trig'
+require'plot'
+require'numeric'
+
+<<jelm.ijs>>=
+<<require>>
+<<utils>>
+<<dataset>>
+<<plotdat>>
+<<plotpoly>>
+<<polyreg>>
+<<gram>>
+<<ridge>>
+<<plotelm>>
+<<elm>>
+<<plottest>>
+<<test>>
+
+@
+\end{document}
