@@ -5,7 +5,7 @@ require'numeric'
 pushup=:   ] + 0.1 * |
 pushdown=: ] - 0.1 * |
 
-NB. select from y the elements with values between {.x and {:x
+NB. identify the elements with values between {.x and {:x
 sel=: (] >: {.@[) *. (] <: {:@[)
 
 mp=: +/ . * NB. matrix product

@@ -173,7 +173,7 @@ polyreg=: 3 : 0
 )
 
 \nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{13}\sublabel{NWS2xmL-qrUr4-2}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-2}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-1}{NWS2xmL-qrUr4-3}\nwenddeflinemarkup
-NB. select from y the elements with values between \{.x and \{:x
+NB. identify the elements with values between \{.x and \{:x
 sel=: (] >: \{.@[) *. (] <: \{:@[)
 
 \nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{14}\sublabel{NWS2xmL-44Bx4d-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-44Bx4d-1}}}\moddef{plotpoly~{\nwtagstyle{}\subpageref{NWS2xmL-44Bx4d-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
@@ -369,19 +369,52 @@ diag=: (<0 1)&|: : (([:(>:*i.)[:#])\})
 addDiag=: ([+diag@]) diag ] NB. add x to the diagonal of y
 
 \nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{23}\nwdocspar
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{ridge4}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   1E_4 ridge 4
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{ridge5}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   1E_4 ridge 5
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
+\noindent\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{ridge8}
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.4\textwidth}
+\begin{verbatim}
+   1E_4 ridge 8
+\end{verbatim}
+\end{minipage}
+\vskip.5\baselineskip
+
 \subsection{Extreme Learning Machine}
-The following parametrized form for $f$ corresponds to a single hidden layer
+The following parametrized form of $f$ corresponds to a single hidden layer
 neural network.
 \[
-f(\vec{x}) = a_1 g(\vec{w_1}\cdot\vec{x}+b_1) + a_2 g(\vec{w_2}\cdot\vec{x}+b_2) 
-+ \dots + a_M g(\vec{w_M}\cdot\vec{x}+b_M)
+f(\vec{x}) = c_1 g(\vec{w_1}\cdot\vec{x}+b_1) + c_2 g(\vec{w_2}\cdot\vec{x}+b_2) 
++ \dots + c_M g(\vec{w_M}\cdot\vec{x}+b_M)
 \]
 $g$ is a non-linear activation function. We use the rectified linear unit (ReLU):
 $g(y)=max(0,y)$.
 
 If vectors $\vec{w_1}\dots\vec{w_M}$ and scalars $b_1\dots b_M$ are initialized
 randomly and never modified (i.e., if they are not parameters), we can solve a
-linear system $\vec{H}\vec{a}=\vec{y}$ of unknwon $\vec{a}$.
+linear system $\vec{H}\vec{c}=\vec{y}$ of unknwon $\vec{c}$.
 \[
 \vec{H}:
 \left( \begin{array}{ccc}
@@ -391,7 +424,7 @@ g(\vec{w_1}\cdot\vec{x_N}+b_1) & \dots & g(\vec{w_M}\cdot\vec{x_N}+b_M)
 \end{array} \right)
 \]
 \begin{align*}
-\vec{a}^T &: \left(a_1 \dots a_M\right) \\
+\vec{c}^T &: \left(c_1 \dots c_M\right) \\
 \vec{y}^T &: \left(y_1 \dots y_N\right)
 \end{align*}
 
