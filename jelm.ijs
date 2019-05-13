@@ -5,7 +5,7 @@ require'numeric'
 pushup=:   ] + 0.1 * |
 pushdown=: ] - 0.1 * |
 
-NB. identify the elements with values between {.x and {:x
+NB. locate the elements with values between {.x and {:x
 sel=: (] >: {.@[) *. (] <: {:@[)
 
 mp=: +/ . * NB. matrix product
@@ -27,6 +27,7 @@ gendat=: 4 : 0
   XT=: ? (>. 0.1 * y) $ 0
   YT=: f XT
 
+  0
 )
 
 

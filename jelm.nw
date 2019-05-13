@@ -32,7 +32,7 @@ y^{(1)} &= a_0 + a_1 x_1^{(1)} + a_2 x_2^{(1)} + \dots + a_{n-1} x_{n-1}^{(1)} \
 y^{(P)} &= a_0 + a_1 x_1^{(P)} + a_2 x_2^{(P)} + \dots + a_{n-1} x_{n-1}^{(P)} \\
 \end{cases}
 \]
-This system can be written In matrix form.
+This system can be written in matrix form.
 \[
 \left( \begin{array}{cccc}
 1 & x^{(1)}_1 & \dots & x^{(1)}_{n-1} \\
@@ -82,7 +82,7 @@ y^{(1)} \\ y^{(2)} \\ \dots \\ y^{(P)}
 Incidentally, the first term is called the Vandermonde Matrix.
 
 \subsection{Experiment with a 1-dimensional synthetic dataset}
-We define a non linear function [[f]] from which we generate a dataset
+We define a non linear function [[f]] from which we generate a dataset.
 
 <<dataset>>=
 f=: 3 : '(^y) * cos 2*pi * sin pi * y'
@@ -120,6 +120,7 @@ gendat=: 4 : 0
   minmaxX=: (<./ , >./) X
   minmaxf=: (([: pushdown <./) , ([: pushup >./)) f steps 0 1 100
   <<testdat>>
+  0
 )
 
 @
@@ -157,14 +158,13 @@ pd (;f) steps 0 1 100
 \begin{minipage}{0.4\textwidth}
 \begin{verbatim}
    0.5 gendat 10
-_2.53128 2.99011
    plotdat 0
 \end{verbatim}
 \end{minipage}
 \vskip.5\baselineskip
 
 [[polyreg 0]] solves the linear system \eqref{eqn:vandermonde} and stores the
-coefficients of the polynomial in variable [[c]].
+coefficients of the polynomial in variable~[[c]].
 
 <<polyreg>>=
 polyreg=: 3 : 0
@@ -173,7 +173,7 @@ polyreg=: 3 : 0
 )
 
 <<utils>>=
-NB. identify the elements with values between {.x and {:x
+NB. locate the elements with values between {.x and {:x
 sel=: (] >: {.@[) *. (] <: {:@[)
 
 <<plotpoly>>=
@@ -228,9 +228,9 @@ y^{(1)} \\ y^{(2)} \\ \dots \\ y^{(n)}
 Let us denote this linear system by $\vec{A}\vec{x}=\vec{b}$.
 
 \subsection{Least squares}
-With more examples than the number of basis functions, the linear system
-$\vec{A}\vec{x}=\vec{b}$ (with $\vec{A} \in \mathbb{R}^{m \times n}$) doesn't
-necessarily have a solution.
+The linear system $\vec{A}\vec{x}=\vec{b}$
+(with $\vec{A} \in \mathbb{R}^{m \times n}$) doesn't necessarily have a solution
+when there are more examples than the number of basis functions (i.e. $m>n$).
 Thus, we want to find an approximate solution $\vec{A}\vec{x}\approx\vec{b}$
 that minimizes the squares of the errors: $\norm{\vec{A}\vec{x}-\vec{b}}^2_2$.
 
@@ -249,7 +249,7 @@ that minimizes the squares of the errors: $\norm{\vec{A}\vec{x}-\vec{b}}^2_2$.
 \end{align*}
 
 To this quadratic expression corresponds a convex surface.
-Its minimum is found by setting the derivative to zero.
+Its minimum is found by setting its derivative to zero.
 
 \begin{align*}
  & \vec{0} = 2\vec{A}^T\vec{A}\vec{x} - 2\vec{A}^T\vec{b} \\
@@ -292,7 +292,6 @@ leastsq=: 3 : 0
 \begin{minipage}{0.4\textwidth}
 \begin{verbatim}
    0.5 gendat 100
-_2.53128 2.99011
    leastsq 5
 \end{verbatim}
 \end{minipage}
@@ -403,7 +402,7 @@ addDiag=: ([+diag@]) diag ] NB. add x to the diagonal of y
 \vskip.5\baselineskip
 
 \subsection{Extreme Learning Machine}
-The following parametrized form of $f$ corresponds to a single hidden layer
+The following parameterized form of $f$ corresponds to a single hidden layer
 neural network.
 \[
 f(\vec{x}) = c_1 g(\vec{w_1}\cdot\vec{x}+b_1) + c_2 g(\vec{w_2}\cdot\vec{x}+b_2) 
@@ -517,7 +516,6 @@ plottest=: 3 : 0
 \begin{minipage}{0.4\textwidth}
 \begin{verbatim}
    test 0
-0.172019
 \end{verbatim}
 \end{minipage}
 \vskip.5\baselineskip
