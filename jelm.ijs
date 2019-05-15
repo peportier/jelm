@@ -8,13 +8,13 @@ pushdown=: ] - 0.1 * |
 NB. locate the elements with values between {.x and {:x
 sel=: (] >: {.@[) *. (] <: {:@[)
 
+mean=: +/ % #
+rmse=: [: %: [: mean ([: *: -)
+
 mp=: +/ . * NB. matrix product
 
 diag=: (<0 1)&|: : (([:(>:*i.)[:#])})
 addDiag=: ([+diag@]) diag ] NB. add x to the diagonal of y
-
-mean=: +/ % #
-rmse=: [: %: [: mean ([: *: -)
 
 f=: 3 : '(^y) * cos 2*pi * sin pi * y'
 noise=: 4 : 'y + -&x *&(+:x) ? (#y) # 0'
@@ -26,7 +26,6 @@ gendat=: 4 : 0
   minmaxf=: (([: pushdown <./) , ([: pushup >./)) f steps 0 1 100
   XT=: ? (>. 0.1 * y) $ 0
   YT=: f XT
-
   0
 )
 
@@ -62,6 +61,7 @@ plotpoly=: 3 : 0
 
 polyreg=: 3 : 0
   c=: Y ([ %. ] ^/ i.@#@]) X
+  YThat=: c&p. XT
   plotpoly 0
 )
 
@@ -73,12 +73,14 @@ gram=: 3 : 0
 leastsq=: 3 : 0
   gram y
   c=: ((|:A) mp Y) %. S
+  YThat=: c&p. XT
   plotpoly 0
 )
 
 ridge=: 4 : 0
   gram y
   c=: ((|:A) mp Y) %.  x addDiag S
+  YThat=: c&p. XT
   plotpoly 0
 )
 
@@ -101,6 +103,7 @@ mkH=: 3 : '0&>. B +"1 y mp"1/ W'
 
 elm=: 3 : 0
   c=: ((|:H) mp Y) %.  y addDiag S
+  YThat=: (mkH ,. XT) mp c
   plotelm 0
 )
 
@@ -123,7 +126,6 @@ plottest=: 3 : 0
 )
 
 test=: 3 : 0
-  YThat=: (mkH ,. XT) mp c
   plottest 0
   YT rmse YThat
 )

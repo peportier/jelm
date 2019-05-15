@@ -109,6 +109,9 @@ $[0,1]$, and the second term is ten percent bigger than the maximum of [[f]] on
 interval $[0,1]$. [[minmaxf]] is later used to crop the plots so that
 extreme values are not visible.
 
+A test set [[(XT,YT)]] is used to assert the capacity of the model to generalize
+on unseen data. Its size is fixed to $10\%$ of the size of the training set.
+
 <<utils>>=
 pushup=:   ] + 0.1 * |
 pushdown=: ] - 0.1 * |
@@ -119,7 +122,8 @@ gendat=: 4 : 0
   Y=: x noise f X
   minmaxX=: (<./ , >./) X
   minmaxf=: (([: pushdown <./) , ([: pushup >./)) f steps 0 1 100
-  <<testdat>>
+  XT=: ? (>. 0.1 * y) $ 0
+  YT=: f XT
   0
 )
 
@@ -163,12 +167,14 @@ pd (;f) steps 0 1 100
 \end{minipage}
 \vskip.5\baselineskip
 
-[[polyreg 0]] solves the linear system \eqref{eqn:vandermonde} and stores the
-coefficients of the polynomial in variable~[[c]].
+[[polyreg 0]] solves the linear system \eqref{eqn:vandermonde}, stores the
+coefficients of the polynomial in variable~[[c]] and computes [[YThat]], the
+predictions on the test dataset.
 
 <<polyreg>>=
 polyreg=: 3 : 0
   c=: Y ([ %. ] ^/ i.@#@]) X
+  YThat=: c&p. XT
   plotpoly 0
 )
 
@@ -199,6 +205,30 @@ plotpoly=: 3 : 0
 \end{minipage}
 \vskip.5\baselineskip
 
+[[test 0]] returns the root mean square error (RMSE) on the test set, and a plot
+of the predictions.
+
+<<utils>>=
+mean=: +/ % #
+rmse=: [: %: [: mean ([: *: -)
+
+<<test>>=
+test=: 3 : 0
+  plottest 0
+  YT rmse YThat
+)
+
+<<plottest>>=
+plottest=: 3 : 0
+  <<initplot>>
+  pd XT;YT
+  pd 'color magenta'
+  pd XT;YThat
+  <<plotf>>
+  pd 'show'
+)
+
+@
 \subsection{Generalization to a function space}
 Given a basis for a function space, we can try to express [[f]] as a combination
 of basis functions.
@@ -281,6 +311,7 @@ matrix for a polynomial basis of degree [[y-1]].
 leastsq=: 3 : 0
   gram y
   c=: ((|:A) mp Y) %. S
+  YThat=: c&p. XT
   plotpoly 0
 )
 
@@ -360,6 +391,7 @@ degree $5$ and a regularization coefficient equal to $10^{-3}$.
 ridge=: 4 : 0
   gram y
   c=: ((|:A) mp Y) %.  x addDiag S
+  YThat=: c&p. XT
   plotpoly 0
 )
 
@@ -449,6 +481,7 @@ regularization coefficient of $10^{-4}$.
 <<elm>>=
 elm=: 3 : 0
   c=: ((|:H) mp Y) %.  y addDiag S
+  YThat=: (mkH ,. XT) mp c
   plotelm 0
 )
 
@@ -476,39 +509,6 @@ plotelm=: 3 : 0
 \end{minipage}
 \vskip.5\baselineskip
 
-\subsection{Test dataset}
-A test set is used to assert the capacity of the model to generalize
-on unseen data. Its size is fixed to $10\%$ of the size of the training set.
-
-<<testdat>>=
-XT=: ? (>. 0.1 * y) $ 0
-YT=: f XT
-
-@
-[[test]] computes the root mean square error (RMSE) on the test set.
-
-<<utils>>=
-mean=: +/ % #
-rmse=: [: %: [: mean ([: *: -)
-
-<<test>>=
-test=: 3 : 0
-  YThat=: (mkH ,. XT) mp c
-  plottest 0
-  YT rmse YThat
-)
-
-<<plottest>>=
-plottest=: 3 : 0
-  <<initplot>>
-  pd XT;YT
-  pd 'color magenta'
-  pd XT;YThat
-  <<plotf>>
-  pd 'show'
-)
-
-@
 \noindent\begin{minipage}{0.5\textwidth}
 \includegraphics[width=\linewidth]{elmtest}
 \end{minipage}%

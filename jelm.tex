@@ -109,6 +109,9 @@ $[0,1]$, and the second term is ten percent bigger than the maximum of {\Tt{}f\n
 interval $[0,1]$. {\Tt{}minmaxf\nwendquote} is later used to crop the plots so that
 extreme values are not visible.
 
+A test set {\Tt{}(XT,YT)\nwendquote} is used to assert the capacity of the model to generalize
+on unseen data. Its size is fixed to $10\%$ of the size of the training set.
+
 \nwenddocs{}\nwbegincode{5}\sublabel{NWS2xmL-qrUr4-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{\relax}{NWS2xmL-qrUr4-2}\nwenddeflinemarkup
 pushup=:   ] + 0.1 * |
 pushdown=: ] - 0.1 * |
@@ -119,7 +122,8 @@ gendat=: 4 : 0
   Y=: x noise f X
   minmaxX=: (<./ , >./) X
   minmaxf=: (([: pushdown <./) , ([: pushup >./)) f steps 0 1 100
-  \LA{}testdat~{\nwtagstyle{}\subpageref{NWS2xmL-15TB7-1}}\RA{}
+  XT=: ? (>. 0.1 * y) $ 0
+  YT=: f XT
   0
 )
 
@@ -163,12 +167,14 @@ pd (;f) steps 0 1 100
 \end{minipage}
 \vskip.5\baselineskip
 
-{\Tt{}polyreg\ 0\nwendquote} solves the linear system \eqref{eqn:vandermonde} and stores the
-coefficients of the polynomial in variable~{\Tt{}c\nwendquote}.
+{\Tt{}polyreg\ 0\nwendquote} solves the linear system \eqref{eqn:vandermonde}, stores the
+coefficients of the polynomial in variable~{\Tt{}c\nwendquote} and computes {\Tt{}YThat\nwendquote}, the
+predictions on the test dataset.
 
 \nwenddocs{}\nwbegincode{12}\sublabel{NWS2xmL-16Ud8S-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-16Ud8S-1}}}\moddef{polyreg~{\nwtagstyle{}\subpageref{NWS2xmL-16Ud8S-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
 polyreg=: 3 : 0
   c=: Y ([ %. ] ^/ i.@#@]) X
+  YThat=: c&p. XT
   plotpoly 0
 )
 
@@ -199,6 +205,30 @@ plotpoly=: 3 : 0
 \end{minipage}
 \vskip.5\baselineskip
 
+{\Tt{}test\ 0\nwendquote} returns the root mean square error (RMSE) on the test set, and a plot
+of the predictions.
+
+\nwenddocs{}\nwbegincode{16}\sublabel{NWS2xmL-qrUr4-3}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-3}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-2}{NWS2xmL-qrUr4-4}\nwenddeflinemarkup
+mean=: +/ % #
+rmse=: [: %: [: mean ([: *: -)
+
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{17}\sublabel{NWS2xmL-Joiug-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-Joiug-1}}}\moddef{test~{\nwtagstyle{}\subpageref{NWS2xmL-Joiug-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
+test=: 3 : 0
+  plottest 0
+  YT rmse YThat
+)
+
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{18}\sublabel{NWS2xmL-D6YgQ-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-D6YgQ-1}}}\moddef{plottest~{\nwtagstyle{}\subpageref{NWS2xmL-D6YgQ-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
+plottest=: 3 : 0
+  \LA{}initplot~{\nwtagstyle{}\subpageref{NWS2xmL-1JSNQW-1}}\RA{}
+  pd XT;YT
+  pd 'color magenta'
+  pd XT;YThat
+  \LA{}plotf~{\nwtagstyle{}\subpageref{NWS2xmL-4gTINf-1}}\RA{}
+  pd 'show'
+)
+
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{19}\nwdocspar
 \subsection{Generalization to a function space}
 Given a basis for a function space, we can try to express {\Tt{}f\nwendquote} as a combination
 of basis functions.
@@ -263,28 +293,29 @@ $\vec{A}^T\vec{A}$ is called the Gram matrix.
 
 {\Tt{}gram\ y\nwendquote} computes the Gram matrix {\Tt{}S\nwendquote} for a polynomial basis of degree {\Tt{}y-1\nwendquote}.
 
-\nwenddocs{}\nwbegincode{16}\sublabel{NWS2xmL-4YHogE-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-1}}}\moddef{gram~{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{\relax}{NWS2xmL-4YHogE-2}\nwenddeflinemarkup
+\nwenddocs{}\nwbegincode{20}\sublabel{NWS2xmL-4YHogE-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-1}}}\moddef{gram~{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{\relax}{NWS2xmL-4YHogE-2}\nwenddeflinemarkup
 gram=: 3 : 0
   A=: X ^/ i.y
   S=: (mp~ |:) A
 ) 
 
-\nwalsodefined{\\{NWS2xmL-4YHogE-2}}\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{17}\sublabel{NWS2xmL-qrUr4-3}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-3}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-2}{NWS2xmL-qrUr4-4}\nwenddeflinemarkup
+\nwalsodefined{\\{NWS2xmL-4YHogE-2}}\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{21}\sublabel{NWS2xmL-qrUr4-4}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-4}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-3}{NWS2xmL-qrUr4-5}\nwenddeflinemarkup
 mp=: +/ . * NB. matrix product
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{18}\nwdocspar
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{22}\nwdocspar
 
 {\Tt{}leastsq\ y\nwendquote} solves the overdetermined linear system by computing the Gram
 matrix for a polynomial basis of degree {\Tt{}y-1\nwendquote}.
 
-\nwenddocs{}\nwbegincode{19}\sublabel{NWS2xmL-4YHogE-2}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-2}}}\moddef{gram~{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-4YHogE-1}{\relax}\nwenddeflinemarkup
+\nwenddocs{}\nwbegincode{23}\sublabel{NWS2xmL-4YHogE-2}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-2}}}\moddef{gram~{\nwtagstyle{}\subpageref{NWS2xmL-4YHogE-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-4YHogE-1}{\relax}\nwenddeflinemarkup
 leastsq=: 3 : 0
   gram y
   c=: ((|:A) mp Y) %. S
+  YThat=: c&p. XT
   plotpoly 0
 )
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{20}\nwdocspar
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{24}\nwdocspar
 \noindent\begin{minipage}{0.5\textwidth}
 \includegraphics[width=\linewidth]{leastsq5}
 \end{minipage}%
@@ -356,18 +387,19 @@ ridge regression\dots
 {\Tt{}1E{\_}3\ ridge\ 5\nwendquote} will solve the ridge regression for a polynomial basis of
 degree $5$ and a regularization coefficient equal to $10^{-3}$.
 
-\nwenddocs{}\nwbegincode{21}\sublabel{NWS2xmL-Vqgr5-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-Vqgr5-1}}}\moddef{ridge~{\nwtagstyle{}\subpageref{NWS2xmL-Vqgr5-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
+\nwenddocs{}\nwbegincode{25}\sublabel{NWS2xmL-Vqgr5-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-Vqgr5-1}}}\moddef{ridge~{\nwtagstyle{}\subpageref{NWS2xmL-Vqgr5-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
 ridge=: 4 : 0
   gram y
   c=: ((|:A) mp Y) %.  x addDiag S
+  YThat=: c&p. XT
   plotpoly 0
 )
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{22}\sublabel{NWS2xmL-qrUr4-4}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-4}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-3}{NWS2xmL-qrUr4-5}\nwenddeflinemarkup
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{26}\sublabel{NWS2xmL-qrUr4-5}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-5}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-4}{\relax}\nwenddeflinemarkup
 diag=: (<0 1)&|: : (([:(>:*i.)[:#])\})
 addDiag=: ([+diag@]) diag ] NB. add x to the diagonal of y
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{23}\nwdocspar
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{27}\nwdocspar
 \noindent\begin{minipage}{0.5\textwidth}
 \includegraphics[width=\linewidth]{ridge4}
 \end{minipage}%
@@ -433,7 +465,7 @@ This approach is named \emph{Extreme Learning Machine}
 {\Tt{}initelm\ 100\nwendquote} initializes randomly matrix H with $100$ neurons on the hidden
 layer (i.e., $M=100$) and computes its Gram form {\Tt{}S\nwendquote}.
 
-\nwenddocs{}\nwbegincode{24}\sublabel{NWS2xmL-3rGYkW-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-1}}}\moddef{elm~{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{\relax}{NWS2xmL-3rGYkW-2}\nwenddeflinemarkup
+\nwenddocs{}\nwbegincode{28}\sublabel{NWS2xmL-3rGYkW-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-1}}}\moddef{elm~{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{\relax}{NWS2xmL-3rGYkW-2}\nwenddeflinemarkup
 initelm=: 3 : 0
   W=: _1 + 2 * ? (y,1) $ 0 NB. input weights
   B=: ? y $ 0 NB. bias
@@ -442,17 +474,18 @@ initelm=: 3 : 0
 )
 mkH=: 3 : '0&>. B +"1 y mp"1/ W'
 
-\nwalsodefined{\\{NWS2xmL-3rGYkW-2}}\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{25}\nwdocspar
+\nwalsodefined{\\{NWS2xmL-3rGYkW-2}}\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{29}\nwdocspar
 {\Tt{}elm\ 1E{\_}4\nwendquote} solves the extreme learning machine linear system with a Tikhonov
 regularization coefficient of $10^{-4}$.
 
-\nwenddocs{}\nwbegincode{26}\sublabel{NWS2xmL-3rGYkW-2}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-2}}}\moddef{elm~{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-3rGYkW-1}{\relax}\nwenddeflinemarkup
+\nwenddocs{}\nwbegincode{30}\sublabel{NWS2xmL-3rGYkW-2}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-2}}}\moddef{elm~{\nwtagstyle{}\subpageref{NWS2xmL-3rGYkW-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-3rGYkW-1}{\relax}\nwenddeflinemarkup
 elm=: 3 : 0
   c=: ((|:H) mp Y) %.  y addDiag S
+  YThat=: (mkH ,. XT) mp c
   plotelm 0
 )
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{27}\sublabel{NWS2xmL-4OfyJI-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-4OfyJI-1}}}\moddef{plotelm~{\nwtagstyle{}\subpageref{NWS2xmL-4OfyJI-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{31}\sublabel{NWS2xmL-4OfyJI-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-4OfyJI-1}}}\moddef{plotelm~{\nwtagstyle{}\subpageref{NWS2xmL-4OfyJI-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
 plotelm=: 3 : 0
   plotdatnoshow 0
   pd 'type line'
@@ -462,7 +495,7 @@ plotelm=: 3 : 0
   pd 'show'
 )
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{28}\nwdocspar
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{32}\nwdocspar
 \noindent\begin{minipage}{0.5\textwidth}
 \includegraphics[width=\linewidth]{elm_1E_3}
 \end{minipage}%
@@ -476,39 +509,6 @@ plotelm=: 3 : 0
 \end{minipage}
 \vskip.5\baselineskip
 
-\subsection{Test dataset}
-A test set is used to assert the capacity of the model to generalize
-on unseen data. Its size is fixed to $10\%$ of the size of the training set.
-
-\nwenddocs{}\nwbegincode{29}\sublabel{NWS2xmL-15TB7-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-15TB7-1}}}\moddef{testdat~{\nwtagstyle{}\subpageref{NWS2xmL-15TB7-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-15el3j-1}}\nwenddeflinemarkup
-XT=: ? (>. 0.1 * y) $ 0
-YT=: f XT
-
-\nwused{\\{NWS2xmL-15el3j-1}}\nwendcode{}\nwbegindocs{30}\nwdocspar
-{\Tt{}test\nwendquote} computes the root mean square error (RMSE) on the test set.
-
-\nwenddocs{}\nwbegincode{31}\sublabel{NWS2xmL-qrUr4-5}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-5}}}\moddef{utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwprevnextdefs{NWS2xmL-qrUr4-4}{\relax}\nwenddeflinemarkup
-mean=: +/ % #
-rmse=: [: %: [: mean ([: *: -)
-
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{32}\sublabel{NWS2xmL-Joiug-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-Joiug-1}}}\moddef{test~{\nwtagstyle{}\subpageref{NWS2xmL-Joiug-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
-test=: 3 : 0
-  YThat=: (mkH ,. XT) mp c
-  plottest 0
-  YT rmse YThat
-)
-
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{33}\sublabel{NWS2xmL-D6YgQ-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-D6YgQ-1}}}\moddef{plottest~{\nwtagstyle{}\subpageref{NWS2xmL-D6YgQ-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
-plottest=: 3 : 0
-  \LA{}initplot~{\nwtagstyle{}\subpageref{NWS2xmL-1JSNQW-1}}\RA{}
-  pd XT;YT
-  pd 'color magenta'
-  pd XT;YThat
-  \LA{}plotf~{\nwtagstyle{}\subpageref{NWS2xmL-4gTINf-1}}\RA{}
-  pd 'show'
-)
-
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegindocs{34}\nwdocspar
 \noindent\begin{minipage}{0.5\textwidth}
 \includegraphics[width=\linewidth]{elmtest}
 \end{minipage}%
@@ -520,12 +520,12 @@ plottest=: 3 : 0
 \end{minipage}
 \vskip.5\baselineskip
 
-\nwenddocs{}\nwbegincode{35}\sublabel{NWS2xmL-3bJuaU-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-3bJuaU-1}}}\moddef{require~{\nwtagstyle{}\subpageref{NWS2xmL-3bJuaU-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
+\nwenddocs{}\nwbegincode{33}\sublabel{NWS2xmL-3bJuaU-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-3bJuaU-1}}}\moddef{require~{\nwtagstyle{}\subpageref{NWS2xmL-3bJuaU-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NWS2xmL-2IxhEH-1}}\nwenddeflinemarkup
 require'trig'
 require'plot'
 require'numeric'
 
-\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{36}\sublabel{NWS2xmL-2IxhEH-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-2IxhEH-1}}}\moddef{jelm.ijs~{\nwtagstyle{}\subpageref{NWS2xmL-2IxhEH-1}}}\endmoddef\nwstartdeflinemarkup\nwenddeflinemarkup
+\nwused{\\{NWS2xmL-2IxhEH-1}}\nwendcode{}\nwbegincode{34}\sublabel{NWS2xmL-2IxhEH-1}\nwmargintag{{\nwtagstyle{}\subpageref{NWS2xmL-2IxhEH-1}}}\moddef{jelm.ijs~{\nwtagstyle{}\subpageref{NWS2xmL-2IxhEH-1}}}\endmoddef\nwstartdeflinemarkup\nwenddeflinemarkup
 \LA{}require~{\nwtagstyle{}\subpageref{NWS2xmL-3bJuaU-1}}\RA{}
 \LA{}utils~{\nwtagstyle{}\subpageref{NWS2xmL-qrUr4-1}}\RA{}
 \LA{}dataset~{\nwtagstyle{}\subpageref{NWS2xmL-1BDS9S-1}}\RA{}
@@ -557,8 +557,7 @@ require'numeric'
 \nwixlogsorted{c}{{require}{NWS2xmL-3bJuaU-1}{\nwixd{NWS2xmL-3bJuaU-1}\nwixu{NWS2xmL-2IxhEH-1}}}%
 \nwixlogsorted{c}{{ridge}{NWS2xmL-Vqgr5-1}{\nwixd{NWS2xmL-Vqgr5-1}\nwixu{NWS2xmL-2IxhEH-1}}}%
 \nwixlogsorted{c}{{test}{NWS2xmL-Joiug-1}{\nwixd{NWS2xmL-Joiug-1}\nwixu{NWS2xmL-2IxhEH-1}}}%
-\nwixlogsorted{c}{{testdat}{NWS2xmL-15TB7-1}{\nwixu{NWS2xmL-15el3j-1}\nwixd{NWS2xmL-15TB7-1}}}%
 \nwixlogsorted{c}{{utils}{NWS2xmL-qrUr4-1}{\nwixd{NWS2xmL-qrUr4-1}\nwixd{NWS2xmL-qrUr4-2}\nwixd{NWS2xmL-qrUr4-3}\nwixd{NWS2xmL-qrUr4-4}\nwixd{NWS2xmL-qrUr4-5}\nwixu{NWS2xmL-2IxhEH-1}}}%
-\nwbegindocs{37}\nwdocspar
+\nwbegindocs{35}\nwdocspar
 \end{document}
 \nwenddocs{}
