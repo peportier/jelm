@@ -60,7 +60,7 @@ plotpoly=: 3 : 0
 )
 
 polyreg=: 3 : 0
-  c=: Y ([ %. ] ^/ i.@#@]) X
+  c=: Y %. X ^/ i.#X
   YThat=: c&p. XT
   plotpoly 0
 )
